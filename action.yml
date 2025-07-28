@@ -27,6 +27,12 @@ inputs:
     required: false
     default: "claude/"
 
+  # Mode configuration
+  mode:
+    description: "Execution mode for the action. Currently only 'tag' mode is supported (traditional implementation triggered by mentions/assignments)"
+    required: false
+    default: "tag"
+
   # Claude Code configuration
   model:
     description: "Model to use (provider-specific format required for Bedrock/Vertex)"
@@ -140,6 +146,7 @@ runs:
       run: |
         bun run ${GITHUB_ACTION_PATH}/src/entrypoints/prepare.ts
       env:
+        MODE: ${{ inputs.mode }}
         TRIGGER_PHRASE: ${{ inputs.trigger_phrase }}
         ASSIGNEE_TRIGGER: ${{ inputs.assignee_trigger }}
         LABEL_TRIGGER: ${{ inputs.label_trigger }}
@@ -160,47 +167,34 @@ runs:
         WEBHOOK_EVENT: ${{ inputs.webhook_event }}
 
 
+    - name: Install Base Action Dependencies
+      if: steps.prepare.outputs.contains_trigger == 'true'
+      shell: bash
+      run: |
+        echo "Installing base-action dependencies..."
+        cd ${GITHUB_ACTION_PATH}/base-action
+        bun install
+        echo "Base-action dependencies installed"
+        cd -
+        # Install Claude Code globally
+        bun install -g @anthropic-ai/claude-code@1.0.59
+
     - name: Setup Network Restrictions
       if: steps.prepare.outputs.contains_trigger == 'true' && inputs.experimental_allowed_domains != ''
       shell: bash
       run: |
-        # Install and configure Squid proxy
-        sudo apt-get update && sudo apt-get install -y squid
-
-        echo "${{ inputs.experimental_allowed_domains }}" > $RUNNER_TEMP/whitelist.txt
-
-        # Configure Squid
-        sudo tee /etc/squid/squid.conf << EOF
-        http_port 127.0.0.1:3128
-        acl whitelist dstdomain "$RUNNER_TEMP/whitelist.txt"
-        acl localhost src 127.0.0.1/32
-        http_access allow localhost whitelist
-        http_access deny all
-        cache deny all
-        EOF
-
-        # Stop any existing squid instance and start with our config
-        sudo squid -k shutdown || true
-        sleep 2
-        sudo rm -f /run/squid.pid
-        sudo squid -N -d 1 &
-        sleep 5
-
-        # Set proxy environment variables
-        echo "http_proxy=http://127.0.0.1:3128" >> $GITHUB_ENV
-        echo "https_proxy=http://127.0.0.1:3128" >> $GITHUB_ENV
-        echo "HTTP_PROXY=http://127.0.0.1:3128" >> $GITHUB_ENV
-        echo "HTTPS_PROXY=http://127.0.0.1:3128" >> $GITHUB_ENV
+        chmod +x ${GITHUB_ACTION_PATH}/scripts/setup-network-restrictions.sh
+        ${GITHUB_ACTION_PATH}/scripts/setup-network-restrictions.sh
+      env:
+        EXPERIMENTAL_ALLOWED_DOMAINS: ${{ inputs.experimental_allowed_domains }}
 
     - name: Run Claude Code
       id: claude-code
       if: steps.prepare.outputs.contains_trigger == 'true'
       shell: bash
       run: |
+
         # Run the base-action
-        cd ${GITHUB_ACTION_PATH}/base-action
-        bun install
-        cd -
         bun run ${GITHUB_ACTION_PATH}/base-action/src/index.ts
       env:
         # Base-action inputs
