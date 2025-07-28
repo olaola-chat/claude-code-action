@@ -5,6 +5,9 @@ branding:
   color: "orange"
 
 inputs:
+  webhook_event:
+    description: "The webhook event payload in JSON format"
+    required: false
   trigger_phrase:
     description: "The trigger phrase to look for in comments or issue body"
     required: false
@@ -154,6 +157,8 @@ runs:
         ACTIONS_TOKEN: ${{ github.token }}
         ADDITIONAL_PERMISSIONS: ${{ inputs.additional_permissions }}
         USE_COMMIT_SIGNING: ${{ inputs.use_commit_signing }}
+        WEBHOOK_EVENT: ${{ inputs.webhook_event }}
+
 
     - name: Setup Network Restrictions
       if: steps.prepare.outputs.contains_trigger == 'true' && inputs.experimental_allowed_domains != ''
