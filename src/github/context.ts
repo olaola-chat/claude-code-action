@@ -49,8 +49,6 @@ export type ParsedGitHubContext = {
 
 export function parseGitHubContext(): ParsedGitHubContext {
   const context = github.context;
-  console.log("=== parseGithubContext Begin ===");
-  console.log("context before override:", context);
 
   // 初始化 repository 信息
   let repository = {
@@ -104,8 +102,6 @@ export function parseGitHubContext(): ParsedGitHubContext {
       console.warn("Failed to parse WEBHOOK_EVENT:", e);
     }
   }
-
-  console.log("context after override:", context);
 
   const modeInput = process.env.MODE ?? DEFAULT_MODE;
   if (!isValidMode(modeInput)) {
