@@ -22,12 +22,13 @@ async function run() {
     const baseBranch = process.env.BASE_BRANCH || "main";
     const triggerUsername = process.env.TRIGGER_USERNAME;
 
+    const serverUrl = GITHUB_SERVER_URL;
+    const { owner: workflowOwner, repo: workflowRepo }= require("@actions/github").context.repo;
+    const jobUrl = `${serverUrl}/${workflowOwner}/${workflowRepo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+
     const context = parseGitHubContext();
     const { owner, repo } = context.repository;
     const octokit = createOctokit(githubToken);
-
-    const serverUrl = GITHUB_SERVER_URL;
-    const jobUrl = `${serverUrl}/${owner}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
 
     let comment;
     let isPRReviewComment = false;
