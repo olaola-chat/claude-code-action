@@ -23,14 +23,12 @@ async function run() {
     const triggerUsername = process.env.TRIGGER_USERNAME;
 
     const context = parseGitHubContext();
-    console.log("parseGitHubContext", context);
 
-    const { owner, repo } = context.repository;
+    const { owner, repo } = require("@actions/github").context.repo;
     const octokit = createOctokit(githubToken);
 
     const serverUrl = GITHUB_SERVER_URL;
     const jobUrl = `${serverUrl}/${owner}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
-
     console.log("jobUrl", jobUrl);
 
     let comment;
