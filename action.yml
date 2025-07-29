@@ -265,6 +265,7 @@ runs:
         PREPARE_ERROR: ${{ steps.prepare.outputs.prepare_error || '' }}
         USE_STICKY_COMMENT: ${{ inputs.use_sticky_comment }}
         USE_COMMIT_SIGNING: ${{ inputs.use_commit_signing }}
+        WEBHOOK_EVENT: ${{ inputs.webhook_event }}
 
     - name: Display Claude Code Report
       if: steps.prepare.outputs.contains_trigger == 'true' && steps.claude-code.outputs.execution_file != ''

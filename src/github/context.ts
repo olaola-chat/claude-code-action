@@ -49,10 +49,13 @@ export type ParsedGitHubContext = {
 
 export function parseGitHubContext(): ParsedGitHubContext {
   const context = github.context;
-  console.log("=== parseGithubContext Begin ===");
 
-  console.log("context before override:", context);
-  console.log("process.env:", Object.fromEntries(Object.entries(process.env)));
+  // 初始化 repository 信息
+  let repository = {
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    full_name: `${context.repo.owner}/${context.repo.repo}`,
+  };
 
   // 使用 process.env.WEBHOOK_EVENT 覆盖 github.context 的上下文信息（如果有）
   if (process.env.WEBHOOK_EVENT) {
@@ -62,23 +65,27 @@ export function parseGitHubContext(): ParsedGitHubContext {
         // eventName
         if (webhookEvent.event) {
           context.eventName = webhookEvent.event;
+          console.log("eventName overridden from webhook event:", context.eventName);
         }
         // payload
         if (webhookEvent.payload) {
           context.payload = webhookEvent.payload;
+          console.log("payload overridden from webhook event:", context.payload);
         }
-        // repo 信息
+        // repository
         if (
           webhookEvent.payload &&
           webhookEvent.payload.repository &&
           typeof webhookEvent.payload.repository === "object"
         ) {
           const repoObj = webhookEvent.payload.repository;
-          if (repoObj.owner && repoObj.owner.login) {
-            context.repo.owner = repoObj.owner.login;
-          }
-          if (repoObj.name) {
-            context.repo.repo = repoObj.name;
+          if (repoObj.owner && repoObj.owner.login && repoObj.name) {
+            repository = {
+              owner: repoObj.owner.login,
+              repo: repoObj.name,
+              full_name: `${repoObj.owner.login}/${repoObj.name}`,
+            };
+            console.log("Repository overridden from webhook event:", repository);
           }
         }
         // actor
@@ -88,14 +95,13 @@ export function parseGitHubContext(): ParsedGitHubContext {
           webhookEvent.payload.sender.login
         ) {
           context.actor = webhookEvent.payload.sender.login;
+          console.log("actor overridden from webhook event:", context.actor);
         }
       }
     } catch (e) {
       console.warn("Failed to parse WEBHOOK_EVENT:", e);
     }
   }
-
-  console.log("context after override:", context);
 
   const modeInput = process.env.MODE ?? DEFAULT_MODE;
   if (!isValidMode(modeInput)) {
@@ -106,11 +112,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
     runId: process.env.GITHUB_RUN_ID!,
     eventName: context.eventName,
     eventAction: context.payload.action,
-    repository: {
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      full_name: `${context.repo.owner}/${context.repo.repo}`,
-    },
+    repository: repository,
     actor: context.actor,
     inputs: {
       mode: modeInput as ModeName,
@@ -134,7 +136,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
 
   switch (context.eventName) {
     case "issues": {
-      console.log("=== parseGithubContext End from case issue ===");
+      console.log("=== parseGithubContext Exit from case issue ===");
       return {
         ...commonFields,
         payload: context.payload as IssuesEvent,
@@ -143,7 +145,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
       };
     }
     case "issue_comment": {
-      console.log("=== parseGithubContext End from case issue_comment ===");
+      console.log("=== parseGithubContext Exit from case issue_comment ===");
       return {
         ...commonFields,
         payload: context.payload as IssueCommentEvent,
@@ -154,7 +156,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
       };
     }
     case "pull_request": {
-      console.log("=== parseGithubContext End from case pull_request ===");
+      console.log("=== parseGithubContext Exit from case pull_request ===");
       return {
         ...commonFields,
         payload: context.payload as PullRequestEvent,
@@ -163,7 +165,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
       };
     }
     case "pull_request_review": {
-      console.log("=== parseGithubContext End from case pull_request_review ===");
+      console.log("=== parseGithubContext Exit from case pull_request_review ===");
       return {
         ...commonFields,
         payload: context.payload as PullRequestReviewEvent,
@@ -173,7 +175,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
       };
     }
     case "pull_request_review_comment": {
-      console.log("=== parseGithubContext End from case pull_request_review_comment ===");
+      console.log("=== parseGithubContext Exit from case pull_request_review_comment ===");
       return {
         ...commonFields,
         payload: context.payload as PullRequestReviewCommentEvent,
@@ -183,7 +185,7 @@ export function parseGitHubContext(): ParsedGitHubContext {
       };
     }
     default:
-      console.log("=== parseGithubContext End from default case ===");
+      console.log("=== parseGithubContext Exit from default case ===");
       throw new Error(`Unsupported event type: ${context.eventName}`);
   }
 }

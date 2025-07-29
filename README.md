@@ -1,8 +1,8 @@
 ![Claude Code Action responding to a comment](https://github.com/user-attachments/assets/1d60c2e9-82ed-4ee5-b749-f9e021c85f4d)
 
-# Claude Code Action
+# Claude Code Action (olaola-chat Fork)
 
-A general-purpose [Claude Code](https://claude.ai/code) action for GitHub PRs and issues that can answer questions and implement code changes. This action listens for a trigger phrase in comments and activates Claude act on the request. It supports multiple authentication methods including Anthropic direct API, Amazon Bedrock, and Google Vertex AI.
+A general-purpose [Claude Code](https://claude.ai/code) action for GitHub PRs and issues that can answer questions and implement code changes. This is a refactored fork of the original [anthropics/claude-code-action](https://github.com/anthropics/claude-code-action) customized for the olaola-chat organization.
 
 ## Features
 
@@ -13,6 +13,44 @@ A general-purpose [Claude Code](https://claude.ai/code) action for GitHub PRs an
 - 🛠️ **Flexible Tool Access**: Access to GitHub APIs and file operations (additional tools can be enabled via configuration)
 - 📋 **Progress Tracking**: Visual progress indicators with checkboxes that dynamically update as Claude completes tasks
 - 🏃 **Runs on Your Infrastructure**: The action executes entirely on your own GitHub runner (Anthropic API calls go to your chosen provider)
+
+## Usage in olaola-chat Organization
+
+### Quick Setup
+
+To use this action in any repository within the olaola-chat organization:
+
+1. **Add the required secrets** to your repository:
+   - `ANTHROPIC_API_KEY`: Your Anthropic API key
+   - Or `CLAUDE_CODE_OAUTH_TOKEN`: Claude Code OAuth token
+
+2. **Create a workflow file** (`.github/workflows/claude.yml`):
+
+```yaml
+name: Claude Code Action
+on:
+  issue_comment:
+    types: [created]
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  claude:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: olaola-chat/claude-code-action@v1.0.0
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "@claude"
+```
+
+3. **Trigger the action** by mentioning `@claude` in any issue comment or PR comment.
+
+### Available Versions
+
+- `@v1.0.0` - Latest stable release (recommended for production)
+- `@main` - Latest development version
+- `@tingting/switch_context` - Specific branch for testing
 
 ## Quickstart
 
