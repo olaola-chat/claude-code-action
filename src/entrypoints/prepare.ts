@@ -27,6 +27,7 @@ async function run() {
 
     // Step 2: Parse GitHub context (once for all operations)
     const context = parseGitHubContext();
+    console.log("Parsed GitHub context:", context);
 
     // Step 3: Check write permissions
     const hasWritePermissions = await checkWritePermissions(

@@ -42,6 +42,14 @@ export async function fetchGitHubData({
   isPR,
   triggerUsername,
 }: FetchDataParams): Promise<FetchDataResult> {
+  console.log("fetchGitHubData", {
+    repository,
+    prNumber,
+    isPR,
+    triggerUsername,
+  });
+
+
   const [owner, repo] = repository.split("/");
   if (!owner || !repo) {
     throw new Error("Invalid repository format. Expected 'owner/repo'.");
@@ -99,6 +107,11 @@ export async function fetchGitHubData({
     console.error(`Failed to fetch ${isPR ? "PR" : "issue"} data:`, error);
     throw new Error(`Failed to fetch ${isPR ? "PR" : "issue"} data`);
   }
+
+  console.log("contextData", contextData);
+  console.log("comments", comments);
+  console.log("changedFiles", changedFiles);
+  console.log("reviewData", reviewData);
 
   // Compute SHAs for changed files
   let changedFilesWithSHA: GitHubFileWithSHA[] = [];
